@@ -1,13 +1,11 @@
 <?php
-session_start();
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Healthhub\Emr\Http\Controllers\UsuarioController;
 
-if (empty($_SESSION['user_id'])) {
-  header("Location: /healthhub/public/index.php");
-  exit;
+$ctrl = new UsuarioController();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $ctrl->store();
+} else {
+    $ctrl->createForm();
 }
-
-$controller = new UsuarioController();
-$controller->create();

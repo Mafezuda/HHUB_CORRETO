@@ -4,63 +4,58 @@ namespace Healthhub\Emr\Http\Controllers;
 use Healthhub\Emr\Core\Controller;
 use Healthhub\Emr\Domain\Entities\Usuario;
 
-class UsuarioController extends Controller
-{
-    public function index(): void
-    {
-        $usuarios = Usuario::all();
-        $this->view('usuario/index', compact('usuarios'));
+class UsuarioController extends Controller {
+    private function requireAuth(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['user_id'])) {
+            $this->redirect('/healthhub/public/index.php');
+        }
     }
 
-    public function create(): void
-    {
+    // Página pós-login com botão de cadastro
+    public function home(): void {
+        $this->requireAuth();
+        $users = Usuario::all(); // mostra também uma listinha pra provar que grava no BD
+        $this->view('usuario/home', compact('users'));
+    }
+
+    public function createForm(): void {
+        $this->requireAuth();
         $this->view('usuario/create');
     }
 
-    public function store(): void
-    {
-        $u = new Usuario();
-        $u->fill([
-            'name'  => trim($_POST['name'] ?? ''),
-            'email' => trim($_POST['email'] ?? ''),
-        ]);
+    public function store(): void {
+        $this->requireAuth();
+
+        // valida inputs
+        $name     = trim($_POST['name'] ?? '');
+        $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
+
+        if ($name === '' || $email === '' || $password === '') {
+            $error = "Preencha todos os campos.";
+            $this->view('usuario/create', compact('error', 'name', 'email'));
+            return;
+        }
+
+        if (Usuario::findByEmail($email)) {
+            $error = "E-mail já cadastrado.";
+            $this->view('usuario/create', compact('error', 'name', 'email'));
+            return;
+        }
+
+        $u = new Usuario();
+        $u->name = $name;
+        $u->email = $email;
         $u->password_hash = password_hash($password, PASSWORD_BCRYPT);
 
-        $u->save();
-        $this->redirect('/healthhub/public/usuario/index.php');
-    }
-
-    public function edit(): void
-    {
-        $id = (int)($_GET['id'] ?? 0);
-        $usuario = Usuario::find($id);
-        if (!$usuario) $this->redirect('/healthhub/public/usuario/index.php');
-        $this->view('usuario/edit', compact('usuario'));
-    }
-
-    public function update(): void
-    {
-        $id = (int)($_POST['id'] ?? 0);
-        $u = Usuario::find($id);
-        if (!$u) $this->redirect('/healthhub/public/usuario/index.php');
-
-        $u->fill([
-            'name'  => trim($_POST['name'] ?? ''),
-            'email' => trim($_POST['email'] ?? ''),
-        ]);
-        if (!empty($_POST['password'])) {
-            $u->password_hash = password_hash($_POST['password'], PASSWORD_BCRYPT);
+        if ($u->save()) {
+            $success = "Usuário cadastrado com sucesso! (ID {$u->id})";
+            $users = Usuario::all();
+            $this->view('usuario/home', compact('success', 'users'));
+        } else {
+            $error = "Falha ao salvar no banco.";
+            $this->view('usuario/create', compact('error', 'name', 'email'));
         }
-        $u->save();
-        $this->redirect('/healthhub/public/usuario/index.php');
-    }
-
-    public function destroy(): void
-    {
-        $id = (int)($_POST['id'] ?? 0);
-        $u = Usuario::find($id);
-        if ($u) $u->delete();
-        $this->redirect('/healthhub/public/usuario/index.php');
     }
 }

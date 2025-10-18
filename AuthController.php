@@ -2,35 +2,37 @@
 namespace Healthhub\Emr\Http\Controllers;
 
 use Healthhub\Emr\Core\Controller;
-use Healthhub\Emr\Domain\Services\AuthService;
+use Healthhub\Emr\Domain\Entities\Usuario;
 
-class AuthController extends Controller
-{
-    public function loginForm(): void
-    {
+class AuthController extends Controller {
+    public function loginForm(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (!empty($_SESSION['user_id'])) {
+            $this->redirect('/healthhub/public/usuario/index.php');
+        }
         $this->view('auth/login');
     }
 
-    public function login(): void
-    {
+    public function login(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
         $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
+        $pass  = $_POST['password'] ?? '';
 
-        $auth = new AuthService();
-
-        if ($auth->attempt($email, $password)) {
-            $this->redirect('/healthhub/public/home.php');
+        $user = Usuario::findByEmail($email);
+        if ($user && password_verify($pass, $user->password_hash)) {
+            $_SESSION['user_id'] = $user->id;
+            $_SESSION['user_name'] = $user->name;
+            $this->redirect('/healthhub/public/usuario/index.php');
         } else {
-            $this->view('auth/login', [
-                'error' => 'E-mail ou senha incorretos.'
-            ]);
+            $error = "Credenciais inválidas.";
+            $this->view('auth/login', compact('error', 'email'));
         }
     }
 
-    public function logout(): void
-    {
-        $auth = new AuthService();
-        $auth->logout();
+    public function logout(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        session_destroy();
         $this->redirect('/healthhub/public/index.php');
     }
 }
