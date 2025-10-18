@@ -1,21 +1,30 @@
 <?php
-namespace Domain\Services;
-use Config\Database;
+namespace Healthhub\Emr\Domain\Services;
 
-class AuthService {
-    public function login(string $email, string $senha): bool {
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("SELECT * FROM usuario WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
-        return $user && password_verify($senha, $user['senha_hash']);
+use Healthhub\Emr\Domain\Repositories\UsuarioRepository;
+
+class AuthService
+{
+    public function __construct(private UsuarioRepository $repo = new UsuarioRepository()) {}
+
+    public function attempt(string $email, string $password): bool
+    {
+        $user = $this->repo->findByEmail($email);
+        if (!$user) return false;
+        if (!password_verify($password, $user->password_hash)) return false;
+
+        $_SESSION['user_id'] = $user->id;
+        $_SESSION['user_name'] = $user->name;
+        return true;
     }
 
-    public function registrar(string $email, string $perfil, string $senha): bool {
-        $hash = password_hash($senha, PASSWORD_BCRYPT);
-        $stmt = Database::getInstance()->prepare(
-            "INSERT INTO usuario (email, perfil, senha_hash) VALUES (?,?,?)"
-        );
-        return $stmt->execute([$email, $perfil, $hash]);
+    public function check(): bool
+    {
+        return !empty($_SESSION['user_id']);
+    }
+
+    public function logout(): void
+    {
+        session_destroy();
     }
 }

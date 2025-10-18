@@ -1,12 +1,18 @@
 <?php
-namespace Domain\Entities;
-use Core\Model;
+namespace Healthhub\Emr\Domain\Entities;
 
-class Usuario extends Model {
-    protected static string $table = 'usuario';
-    protected array $fields = ['email', 'perfil', 'senha_hash'];
+use Healthhub\Emr\Core\Model;
 
-    public string $email;
-    public string $perfil;
-    public string $senha_hash;
+class Usuario extends Model
+{
+    protected string $table = 'users';
+    protected string $primaryKey = 'id';
+    protected array  $fillable = ['name', 'email', 'password_hash'];
+
+    public ?int $id = null;
+    public string $name = '';
+    public string $email = '';
+    public string $password_hash = '';
+    public ?string $created_at = null;
+    public ?string $updated_at = null;
 }

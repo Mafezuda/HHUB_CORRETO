@@ -10,4 +10,4 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $controller = new UsuarioController();
-$controller->index();
+$controller->store();

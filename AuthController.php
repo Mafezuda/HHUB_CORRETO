@@ -1,32 +1,36 @@
 <?php
-namespace Http\Controllers;
-use Core\Controller;
-use Domain\Services\AuthService;
+namespace Healthhub\Emr\Http\Controllers;
 
-class AuthController extends Controller {
-    private AuthService $auth;
+use Healthhub\Emr\Core\Controller;
+use Healthhub\Emr\Domain\Services\AuthService;
 
-    public function __construct() {
-        $this->auth = new AuthService();
+class AuthController extends Controller
+{
+    public function loginForm(): void
+    {
+        $this->view('auth/login');
     }
 
-    public function login(): void {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $ok = $this->auth->login($_POST['email'], $_POST['senha']);
-            echo $ok 
-                ? "<p style='color:green;'>Login realizado com sucesso!</p>"
-                : "<p style='color:red;'>Usuário ou senha incorretos.</p>";
+    public function login(): void
+    {
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        $auth = new AuthService();
+
+        if ($auth->attempt($email, $password)) {
+            $this->redirect('/healthhub/public/home.php');
         } else {
-            $this->view('auth/login');
+            $this->view('auth/login', [
+                'error' => 'E-mail ou senha incorretos.'
+            ]);
         }
     }
 
-    public function register(): void {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->auth->registrar($_POST['email'], $_POST['perfil'], $_POST['senha']);
-            echo "<p style='color:green;'>Usuário cadastrado com sucesso!</p>";
-        } else {
-            $this->view('auth/register_usuario');
-        }
+    public function logout(): void
+    {
+        $auth = new AuthService();
+        $auth->logout();
+        $this->redirect('/healthhub/public/index.php');
     }
 }

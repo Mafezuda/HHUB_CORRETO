@@ -1,18 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Login - HealthHub</title>
-</head>
-<body>
-  <h2>Login</h2>
-  <form method="POST">
-    <label>E-mail:</label><br>
-    <input type="email" name="email" required><br>
-    <label>Senha:</label><br>
-    <input type="password" name="senha" required><br><br>
-    <button type="submit">Entrar</button>
-  </form>
-  <p><a href="register_usuario.php">Cadastrar novo usuário</a></p>
-</body>
-</html>
+<?php if (!empty($error)): ?>
+  <article class="contrast"><strong><?= htmlspecialchars($error) ?></strong></article>
+<?php endif; ?>
+
+<form method="post" action="/healthhub/public/index.php?action=login">
+  <label>E-mail
+    <input type="email" name="email" required>
+  </label>
+  <label>Senha
+    <input type="password" name="password" required>
+  </label>
+  <button type="submit">Entrar</button>
+</form>

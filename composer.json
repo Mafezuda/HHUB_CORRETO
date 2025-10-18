@@ -1,0 +1,12 @@
+{
+  "name": "healthhub/emr",
+  "description": "HealthHub EMR - Login + Cadastro com ORM e Database-First",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "Healthhub\\Emr\\": "src/"
+    }
+  },
+  "minimum-stability": "stable",
+  "license": "MIT"
+}
